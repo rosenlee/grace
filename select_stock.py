@@ -16,24 +16,28 @@ import re
 import lxml.html
 from lxml import etree
 import json
-from tushare_src.stock import billboard as bd
+#from tushare_src.stock import billboard as bd
 import time
 import sys
+import basicData
 
 try:
     from urllib.request import urlopen, Request
 except ImportError:
     from urllib2 import urlopen, Request
 
+curdate=time.strftime('%Y-%m-%d',time.localtime(time.time()))
 
-if sys.argv[1] isnot none:
+if len(sys.argv) > 1:
 	print sys.argv[1]
+	curdate=sys.argv[1]
 else:
 	print "请输入参数！"
+	#当前时间
 	
-exit
-#当前时间
-curdate=time.strftime('%Y-%m-%d',time.localtime(time.time()))
+	
+
+
 
 url = "http://stock.jrj.com.cn/action/lhb/getYybSbList.jspa?vname=jryyblhb1&sbDay=1d&date="+curdate+"&page=1&psize=200&order=desc&sort=ttimes&_dc=1441160193229"
 
@@ -51,21 +55,37 @@ js = json.loads(text[14:-1].decode('utf-8'))
 jdata = js['data']
 #上榜营业部总数量
 jtotal = js['summary']['total']
-print  js['summary']['datetime']
+print  js['summary']['datetime'], jtotal
 #列名
 jcolumn = js['column']
 filename=curdate[:10]+".csv"
 print filename
 #print jcolumn
 csvfile=open(filename, "w")
+corecsvfile=open("core"+filename, "w")
+
+terminate = False
 #输出列表
 for elem in jdata:
-	for  e in elem:
+	if basicData.isInCoreYYBU(elem[1]):
+		terminate = True
+		#print elem
+		#for  e in elem:	
+			#print e.encode('utf-8', 'ignore'),",",
+			#print "\n"
+	for  e in elem:		
 		print >> csvfile,  e.encode('utf-8', 'ignore'),",",
+		if terminate:
+			print >>corecsvfile, e.encode('utf-8', 'ignore'),",",
 	print >> csvfile, "\n"
+
+	if terminate:
+		print >> corecsvfile, "\n"
+	terminate = False
 
 #print >> csvfile, jdata
 csvfile.close()
+corecsvfile.close()
 #print jdata[1][1]
 
 
