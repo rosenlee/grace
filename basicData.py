@@ -31,7 +31,7 @@ def getYYBDataByCode(yybcode):
 		if node[0] == yybcode:
 			#print node
 			return  node[1]
-	return None
+	return "not found"
 	
 #返回营业部代码
 def getYYBDataByName(yybname):
