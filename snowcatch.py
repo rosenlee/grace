@@ -13,6 +13,15 @@ from email.MIMEText import MIMEText
 from email.MIMEImage import MIMEImage
 import smtplib
 
+import lxml.html
+from lxml import etree
+
+from pandas.compat import StringIO
+
+import snowparse as sp 
+import snowcatch_config as config #目前是定义登录用户私密数据
+
+
 '''
 <Introduction>
 ——————————————————————————————————————————
@@ -39,13 +48,15 @@ urllib2.install_opener(opener)
 #安装opener后，此后调用urlopen()都会使用安装过的opener(意思就是发的请求就是带cookie的了)
 
 headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.102 Safari/537.36"}   #伪装成浏览器
-data = {
+'''data = {
 	"areacode" : "86",
 	"password" : "5124694000a",
 	"remember_me" : "on",
 	"telephone" : "13566699624"
 	}
-post_data = urllib.urlencode(data)
+'''
+	
+post_data = urllib.urlencode(config.data)
 request = urllib2.Request(login_url,post_data,headers)
 try:
 	r = opener.open(request)
@@ -55,9 +66,9 @@ except urllib2.HTTPError, e:
 
 print "login on success!"
 
+url = 'http://xueqiu.com/7610708650'
 
-def GetUser():
-	url = 'http://xueqiu.com/7610708650'
+def GetUser(url):
 	# base64string = base64.encodestring('%s:%s' % ("api", "1674a71d8e1bf40d2777c007717bffc3"))[:-1]
 	# authheader = "Basic %s"%base64string
 	# values = {"mobile" : phonenumber ,
@@ -72,9 +83,40 @@ def GetUser():
 		print "wrong api and key!"
 		print e.code
 	text = result.read()
-	print text
+	return text
+
+def PaserData(data):
+     html = lxml.html.parse(StringIO(data))
+     res = html.xpath('//div[@class=\"status_box \"]/script')
+     arr =   [etree.tostring(node) for node in res]
+     #get SNB.data
+     sptxt = arr[0].split('SNB.data')
+     startpos = sptxt[2].index('{')
+     lastpos = sptxt[2].rindex(';')
+
+     jsdata = json.loads(sptxt[2][startpos:lastpos])
+     
+     #过滤HTML 标签 正则表达式 
+     dr = re.compile(r'<[^>]+>',re.S)
+     #dd = dr.sub('',Html)
+     if jsdata:
+     	from HTMLParser import HTMLParser
+	h = HTMLParser()
+        i = 0
+	for item in jsdata["statuses"]: 
+           desc = dr.sub('', h.unescape(item['description']))
+           print "content:", i, desc
+	   i = i + 1
+
+     return  ;
+
+def PaserSNData(sndata):
+    pass
+
+
+
 	
 if __name__ == '__main__' :
-	GetUser()
+	GetUser(url)
 	
 	
