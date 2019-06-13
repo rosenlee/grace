@@ -54,7 +54,7 @@ st =  time.localtime()
 displayTime = time.strftime("%Y-%m-%d %X", st)
 
 def getAuthorization():
-    authStr = base64.b64encode( username+ ":" + password);
+    authStr = "Basic " + base64.b64encode( username+ ":" + password);
     print("auth string= " + authStr)
     return authStr;
 
